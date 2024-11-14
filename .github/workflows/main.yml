@@ -1,4 +1,4 @@
-name: Build App
+name: Build and Analyze with SonarQube
 
 on:
   push:
@@ -7,58 +7,59 @@ on:
   pull_request:
     branches:
       - main
-
+# Correra en la maquina local
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+
 
     steps:
-      # Paso 1: Se le hace Checkout
-      - name: Checkout
+      # Paso 1: Checkout del código fuente
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      # Paso 2: Se elecciona el JDK
+      # Paso 2: Configuración del JDK
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Paso 3:Dependencias de Cache SonarQube 
+      # Paso 3: Cache de paquetes SonarQube
       - name: Cache SonarQube packages
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      # Paso 4:Dependencias de  Cache Maven 
-      - name: Cache Maven packages
-        uses: actions/cache@v1
+          key: ${{ runner.os }}-sonar-cache
+
+      # Paso 4: Cache de dependencias Maven
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
         with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      # Paso 5: SonarQube
-      - name: Build and analyze
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      # Paso 5: Análisis con SonarQube
+      - name: SonarQube Analysis
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Necesario para PRs
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_VERSION: ${{ secrets.SONAR_VERSION }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-      # Paso 4: Run Maven build
+        run: mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+
+      # Paso 6: Compilación con Maven
       - name: Build with Maven
         run: mvn clean install
-      
-      # Paso 5: Guardar Jar
+
+      # Paso 7: Guardar el archivo JAR como un artefacto
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: Guardar Jar
+          name: Aplicacion-JAR
           path: target/*.jar
-      
 
-      # Paso 6 Pruebas
+      # Paso 8: Ejecutar pruebas
       - name: Run Tests
         run: mvn test
-
