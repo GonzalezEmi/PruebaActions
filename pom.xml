@@ -15,6 +15,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <sonar.projectKey>GonzalezEmi_PruebaActions</sonar.projectKey>
     </properties>
 
     <dependencies>

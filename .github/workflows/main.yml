@@ -24,15 +24,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Paso 3:Dependencias de  Cache Maven 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
+      # Paso 3:Dependencias de Cache SonarQube 
+      - name: Cache SonarQube packages
+        uses: actions/cache@v1
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      # Paso 4:Dependencias de  Cache Maven 
+      - name: Cache Maven packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      # Paso 5: SonarQube
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
       # Paso 4: Run Maven build
       - name: Build with Maven
         run: mvn clean install
