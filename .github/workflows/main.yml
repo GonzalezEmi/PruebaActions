@@ -44,6 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_VERSION: ${{ secrets.SONAR_VERSION }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
       # Paso 4: Run Maven build
       - name: Build with Maven
